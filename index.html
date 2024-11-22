@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Evaluativo de Matemáticas </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #2d3748;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #progress-bar {
+            background-color: #e2e8f0;
+            border-radius: 8px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        #progress {
+            background: linear-gradient(90deg, #4299e1 0%, #2b6cb0 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #topic-indicator {
+            text-align: center;
+            color: #4a5568;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        #question-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .question {
+            margin-bottom: 1.5rem;
+        }
+
+        .options {
+            margin-top: 1rem;
+        }
+
+        .option-label {
+            display: block;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-label:hover {
+            background-color: #ebf8ff;
+            border-color: #4299e1;
+        }
+
+        input[type="radio"]:checked + .option-label {
+            background-color: #ebf8ff;
+            border-color: #4299e1;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #prev-button {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        #next-button {
+            background-color: #4299e1;
+            color: white;
+        }
+
+        #submit-button {
+            background-color: #48bb78;
+            color: white;
+            display: none;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Estilos para las ayudas */
+        .help-section {
+            margin-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1rem;
+        }
+
+        .help-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .help-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #4299e1;
+            border-radius: 6px;
+            background-color: white;
+            color: #4299e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .help-content {
+            display: none;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .help-content.active {
+            display: block;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            margin-top: 1rem;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background: #1a365d;
+            color: white;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Taller Uno - Nivelatorio semestre 02</h1>
+    </header>
+    
+    <main>
+        <div id="progress-bar">
+            <div id="progress"></div>
+        </div>
+        <div id="topic-indicator"></div>
+        <div id="question-container"></div>
+        <div class="buttons">
+            <button id="prev-button" disabled>Anterior</button>
+            <button id="next-button">Siguiente</button>
+            <button id="submit-button">Finalizar Taller</button>
+        </div>
+        <div id="result-container">
+            <h2>Resultados del taller nivelatorio</h2>
+            <div id="score-display"></div>
+            <div id="topic-breakdown"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Sistema Nivelatorio para Matemáticas - Juan A Arias Quiceno & John J Estrada Álvarez</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const questions = {
+                aritmetica: [
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\left(\\frac{5}{6} - \\left\\{\\frac{1}{2} - \\left[\\frac{1}{3} + \\frac{1}{4}\\right]\\right\\}\\right) × \\frac{3}{4}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://www.thatquiz.org/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '\\frac{11}{16}' },
+                            { latex: '\\frac{3}{4}' },
+                            { latex: '\\frac{7}{12}' },
+                            { latex: '\\frac{2}{3}' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\frac{1}{4} ÷ \\left(\\frac{2}{3} - \\frac{1}{8}\\right) + \\frac{1}{2}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '\\frac{7}{6}' },
+                            { latex: '\\frac{5}{4}' },
+                            { latex: '\\frac{4}{3}' },
+                            { latex: '\\frac{25}{26}' }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\left\\{\\frac{2}{3} × \\left(\\frac{3}{4} + \\frac{1}{2}\\right)\\right\\} ÷ \\left(\\frac{1}{6} + \\frac{1}{3}\\right)',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '2' },
+                            { latex: '\\frac{3}{2}' },
+                            { latex: '\\frac{5}{3}' },
+                            { latex: '3' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\left(\\frac{1}{2} + \\frac{3}{4}\\right) - \\left[\\frac{1}{5} - \\left(\\frac{1}{2} - \\frac{1}{3}\\right)\\right]',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '\\frac{73}{60}' },
+                            { latex: '\\frac{7}{6}' },
+                            { latex: '\\frac{11}{10}' },
+                            { latex: '\\frac{5}{4}' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '{6 + [3 × (2 + 1)]} - 4',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '11' },
+                            { latex: '13' },
+                            { latex: '9' },
+                            { latex: '15' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '[5 × (3 + 2)] - {7 + (3 × 2)}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '12' },
+                            { latex: '15' },
+                            { latex: '11' },
+                            { latex: '17' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '8 × (5 - [3 - 1]) + 2',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '26' },
+                            { latex: '24' },
+                            { latex: '28' },
+                            { latex: '22' }
+                        ],
+                        correct: 0
+                    }, 
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '-9 + 4 - 8 + 12 - 6',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '-7' },
+                            { latex: '-5' },
+                            { latex: '-9' },
+                            { latex: '-3' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '10 + 5 - 7 - 3 + 2',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '7' },
+                            { latex: '5' },
+                            { latex: '9' },
+                            { latex: '3' }
+                        ],
+                        correct: 0
+                    },                
+                    {
+                        question: 'Resuelve la siguiente operación:',
+                        latex: '\\frac{2}{3} + \\frac{5}{6}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '\\frac{3}{2}' },
+                            { latex: '\\frac{7}{6}' },
+                            { latex: '\\frac{19}{18}' },
+                            { latex: '\\frac{25}{18}' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Suma los siguientes números y considera la mejor forma de alinearlos:',
+                        latex: ' \n  \n 2,3 + 1,456 \\\\   \n  \n \\\\  Sugerencia: \\\\ \\textbf{Alinea los números por el punto decimal} \\\\ \n  \n  \n \\\\ \\\\ \n{ } \n{ } \n{ } \n\\begin{align*} 2,300 \\\\ +1,456 \\end{align*}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '3,756' },
+                            { latex: '3,856' },
+                            { latex: '3,656' },
+                            { latex: '3,956' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Suma los siguientes números y considera la mejor forma de alinearlos:',
+                        latex: ' \n  \n 0,75 + 0,004 \\\\   \n  \n \\\\  Sugerencia: \\\\ \\textbf{Alinea los números por el punto decimal} \\\\ \n  \n  \n \\\\ \\\\ \n{ } \n{ } \n{ } \n\\begin{align*} 0,750 \\\\ +0,004 \\end{align*}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '0,754' },
+                            { latex: '0,745' },
+                            { latex: '0,755' },
+                            { latex: '0,753' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Suma los siguientes números y considera la mejor forma de alinearlos:',
+                        latex: ' \n  \n 123,4 + 56,789 \\\\   \n  \n \\\\  Sugerencia: \\\\ \\textbf{Alinea los números por el punto decimal} \\\\ \n  \n  \n \\\\ \\\\ \n{ } \n{ } \n{ } \n\\begin{align*} 123,400 \\\\ +56,789 \\end{align*}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '180,189' },
+                            { latex: '179,189' },
+                            { latex: '181,189' },
+                            { latex: '178,189' }
+                        ],
+                        correct: 0
+                    },
+                    
+                ]
+            };
+
+            let currentTopic = 0;
+            let currentQuestion = 0;
+            const topics = Object.keys(questions);
+            const topicNames = {
+                'aritmetica': 'Aritmética básica'
+            };
+            let userAnswers = {};
+
+            const container = document.getElementById("question-container");
+            const prevButton = document.getElementById("prev-button");
+            const nextButton = document.getElementById("next-button");
+            const submitButton = document.getElementById("submit-button");
+            const progressBar = document.getElementById("progress");
+            const topicIndicator = document.getElementById("topic-indicator");
+
+            function displayQuestion() {
+                const topic = topics[currentTopic];
+                const question = questions[topic][currentQuestion];
+                
+                let helpSection = '';
+                if (question.helps) {
+                    helpSection = `
+                        <div class="help-section">
+                            <h4>¿Necesitas ayuda?</h4>
+                            <div class="help-buttons">
+                                ${question.helps.video ? `
+                                    <button class="help-button" data-help="video">
+                                        <i class="fas fa-video"></i>
+                                        Video explicativo
+                                    </button>
+                                ` : ''}
+                                ${question.helps.text ? `
+                                    <button class="help-button" data-help="text">
+                                        <i class="fas fa-file-alt"></i>
+                                        Texto explicativo
+                                    </button>
+                                ` : ''}
+                                ${question.helps.link ? `
+                                    <button class="help-button" data-help="link">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        Recurso web
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="help-contents">
+                                ${question.helps.video ? `
+                                    <div class="help-content" id="video-help">
+                                        <h5>${question.helps.video.title}</h5>
+                                        <div class="video-container">
+                                            <iframe src="https://www.youtube.com/embed/${question.helps.video.id}" 
+                                                    frameborder="0" 
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                    allowfullscreen></iframe>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                ${question.helps.text ? `
+                                    <div class="help-content" id="text-help">
+                                        <h5>${question.helps.text.title}</h5>
+                                        <div>${question.helps.text.content}</div>
+                                    </div>
+                                ` : ''}
+                                ${question.helps.link ? `
+                                    <div class="help-content" id="link-help">
+                                        <h5>Recurso adicional</h5>
+                                        <a href="${question.helps.link.url}" target="_blank" rel="noopener noreferrer">
+                                            ${question.helps.link.title}
+                                            <i class="fas fa-external-link-alt ml-2"></i>
+                                        </a>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <div class="question">
+                        <h3>Pregunta ${currentTopic * questions[topic].length + currentQuestion + 1}</h3>
+                        <p>${question.question}</p>
+                        ${question.latex ? `<p>$$${question.latex}$$</p>` : ''}
+                        <div class="options">
+                            ${question.options.map((option, index) => `
+                                <div>
+                                    <input type="radio" id="option${index}" name="answer" value="${index}" 
+                                        ${userAnswers[`${topic}_${currentQuestion}`] === index ? 'checked' : ''}>
+                                    <label class="option-label" for="option${index}">
+                                        ${option.latex ? `$$${option.latex}$$` : option}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${helpSection}
+                    </div>
+                `;
+
+                // Agregar event listeners para los botones de ayuda
+                document.querySelectorAll('.help-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const helpType = this.dataset.help;
+                        toggleHelp(helpType);
+                    });
+                });
+
+                // Renderizar LaTeX
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+
+                updateProgress();
+                updateTopicIndicator();
+                updateButtons();
+            }
+
+            function toggleHelp(helpType) {
+                const helpContents = document.querySelectorAll('.help-content');
+                helpContents.forEach(content => {
+                    if (content.id === `${helpType}-help`) {
+                        content.classList.toggle('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            }
+
+            function updateProgress() {
+                const totalQuestions = Object.values(questions).reduce((acc, curr) => acc + curr.length, 0);
+                const currentTotal = currentTopic * questions[topics[currentTopic]].length + currentQuestion + 1;
+                const progress = (currentTotal / totalQuestions) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+
+            function updateTopicIndicator() {
+                topicIndicator.textContent = `Tópico actual: ${topicNames[topics[currentTopic]]}`;
+            }
+
+            function updateButtons() {
+                prevButton.disabled = currentTopic === 0 && currentQuestion === 0;
+                const isLastQuestion = currentTopic === topics.length - 1 && 
+                                     currentQuestion === questions[topics[currentTopic]].length - 1;
+                
+                nextButton.style.display = isLastQuestion ? 'none' : 'block';
+                submitButton.style.display = isLastQuestion ? 'block' : 'none';
+            }
+
+            function saveAnswer() {
+                const selectedOption = document.querySelector('input[name="answer"]:checked');
+                if (selectedOption) {
+                    userAnswers[`${topics[currentTopic]}_${currentQuestion}`] = parseInt(selectedOption.value);
+                }
+            }
+
+            function navigateQuestion(direction) {
+                saveAnswer();
+                
+                if (direction === 'next') {
+                    if (currentQuestion < questions[topics[currentTopic]].length - 1) {
+                        currentQuestion++;
+                    } else if (currentTopic < topics.length - 1) {
+                        currentTopic++;
+                        currentQuestion = 0;
+                    }
+                } else {
+                    if (currentQuestion > 0) {
+                        currentQuestion--;
+                    } else if (currentTopic > 0) {
+                        currentTopic--;
+                        currentQuestion = questions[topics[currentTopic]].length - 1;
+                    }
+                }
+                
+                displayQuestion();
+            }
+
+            function calculateResults() {
+                const results = {
+                    total: 0,
+                    byTopic: {}
+                };
+
+                topics.forEach(topic => {
+                    let topicCorrect = 0;
+                    questions[topic].forEach((q, index) => {
+                        if (userAnswers[`${topic}_${index}`] === q.correct) {
+                            topicCorrect++;
+                            results.total++;
+                        }
+                    });
+                    results.byTopic[topic] = {
+                        correct: topicCorrect,
+                        total: questions[topic].length,
+                        percentage: (topicCorrect / questions[topic].length) * 100
+                    };
+                });
+
+                const totalQuestions = Object.values(questions).reduce((acc, curr) => acc + curr.length, 0);
+                results.percentage = (results.total / totalQuestions) * 100;
+
+                return results;
+            }
+
+            function displayResults() {
+                const results = calculateResults();
+                const resultContainer = document.getElementById('result-container');
+                const questionContainer = document.getElementById('question-container');
+                const buttons = document.querySelector('.buttons');
+
+                // Ocultar contenedor de preguntas y botones
+                questionContainer.style.display = 'none';
+                buttons.style.display = 'none';
+
+                // Mostrar resultados
+                let topicBreakdown = '';
+                Object.entries(results.byTopic).forEach(([topic, data]) => {
+                    topicBreakdown += `
+                        <div class="topic-result">
+                            <h3>${topicNames[topic]}</h3>
+                            <p>Correctas: ${data.correct} de ${data.total}</p>
+                            <p>Porcentaje: ${data.percentage.toFixed(1)}%</p>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('score-display').innerHTML = `
+                    <h3>Puntuación Total: ${results.percentage.toFixed(1)}%</h3>
+                    <p>Respuestas correctas: ${results.total} de ${Object.values(questions).reduce((acc, curr) => acc + curr.length, 0)}</p>
+                `;
+
+                document.getElementById('topic-breakdown').innerHTML = topicBreakdown;
+                resultContainer.style.display = 'block';
+            }
+
+            // Event Listeners
+            prevButton.addEventListener('click', () => navigateQuestion('prev'));
+            nextButton.addEventListener('click', () => navigateQuestion('next'));
+            submitButton.addEventListener('click', displayResults);
+
+            // Iniciar el cuestionario
+            displayQuestion();
+        });
+    </script>
+</body>
+</html>
